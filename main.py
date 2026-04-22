@@ -1,20 +1,18 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 import httpx
-import asyncio
 from datetime import datetime
-from typing import List
 
 app = FastAPI()
 
-# --- 1. MODEL DEFINITION (Missing in your previous logs) ---
+# --- 1. MODEL DEFINITION (Ye lazmi hai) ---
 class Website(BaseModel):
     url: str
 
 # Monitoring list
 db_websites = ["https://www.google.com", "https://www.github.com", "https://www.python.org"]
 
-# --- 2. ROOT ROUTE ---
+# --- 2. HOME ROUTE ---
 @app.get("/")
 def home():
     return {"status": "Pulse Era API is Running"}
@@ -37,18 +35,19 @@ async def get_status():
                     "Last_Check": datetime.now().strftime("%H:%M:%S")
                 })
             except Exception:
-                results.append({"URL": url, "Status": "DOWN", "HTTP_Code": 0, "Latency_ms": 0, "Last_Check": datetime.now().strftime("%H:%M:%S")})
+                results.append({
+                    "URL": url, 
+                    "Status": "DOWN", 
+                    "HTTP_Code": 0, 
+                    "Latency_ms": 0, 
+                    "Last_Check": datetime.now().strftime("%H:%M:%S")
+                })
     return results
 
 # --- 4. ADD WEBSITE ROUTE ---
 @app.post("/add-website")
 async def add_node(node: Website):
-    clean_url = node.url.strip()
-    if not clean_url:
-        raise HTTPException(status_code=400, detail="URL cannot be empty")
-        
-    if clean_url not in db_websites:
-        db_websites.append(clean_url)
-        return {"status": "SYNCED", "added": clean_url}
-    
-    return {"status": "ALREADY_EXISTS"}
+    if node.url not in db_websites:
+        db_websites.append(node.url)
+        return {"message": f"Added {node.url}"}
+    return {"message": "Already exists"}
