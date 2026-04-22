@@ -11,6 +11,9 @@ app = FastAPI(
     title="PULSE ERA | API Monitoring Tool",
     description="Backend for monitoring website health and latency"
 )
+@app.get("/")
+def home():
+    return {"status": "Pulse Era API is Running", "version": "1.0"}
 
 # --- 2. CORS MIDDLEWARE (Zaroori for Deployment) ---
 # Iske baghair aapka frontend API ko call nahi kar sakega

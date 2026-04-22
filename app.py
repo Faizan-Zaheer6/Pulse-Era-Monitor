@@ -84,7 +84,8 @@ with st.sidebar:
     if st.button("INITIALIZE"):
         if new_url:
             try:
-                requests.post("http://127.0.0.1:8000/add-website", json={"url": new_url}, timeout=2)
+                # Yahan apna Vercel backend URL dalen
+                requests.post("https://pulse-era-monitor.vercel.app/add-website", json={"url": new_url}, timeout=2)
                 st.success("Syncing...")
                 time.sleep(1)
                 st.rerun()
@@ -94,28 +95,28 @@ with st.sidebar:
 # --- 6. MAIN DASHBOARD ---
 st.title("⚡ Global Grid Monitor")
 
+# UPDATE THIS URL with your Vercel backend link
+API_URL = "https://pulse-era-monitor.vercel.app/status"
+
 try:
-    res = requests.get("http://127.0.0.1:8000/status", timeout=8)
+    res = requests.get(API_URL, timeout=8)
     if res.status_code == 200:
         raw_data = res.json()
         if raw_data:
-            # Create DataFrame
             df = pd.DataFrame(raw_data)
             
-            # 🔥 Fix: Rename columns to match the Frontend logic
+            # Mapping FastAPI keys to Streamlit UI
             df = df.rename(columns={
                 'Latency_ms': 'Latency (ms)', 
                 'HTTP_Code': 'HTTP Code',
                 'Last_Check': 'Time'
             })
             
-            # Data Cleanup
             df['HTTP Code'] = df['HTTP Code'].astype(str)
 
             # Metrics
             c1, c2, c3 = st.columns(3)
             c1.metric("Live Nodes", len(df))
-            # Calculate Avg Latency safely
             avg_lat = round(df['Latency (ms)'].mean(), 2) if 'Latency (ms)' in df.columns else 0
             c2.metric("Avg Latency", f"{avg_lat} ms")
             c3.metric("Grid Status", "ACTIVE")
@@ -124,7 +125,6 @@ try:
             st.subheader("📈 Signal Stability Waveforms")
             now = datetime.now().strftime("%H:%M:%S")
             
-            # Update Persistent History
             new_recs = [{'Time': now, 'URL': r['URL'], 'Latency': r['Latency (ms)']} for _, r in df.iterrows()]
             st.session_state.history = pd.concat([st.session_state.history, pd.DataFrame(new_recs)], ignore_index=True).tail(200)
             
@@ -132,10 +132,8 @@ try:
                 chart_pivoted = st.session_state.history.pivot_table(index='Time', columns='URL', values='Latency', aggfunc='mean')
                 st.line_chart(chart_pivoted)
 
-            # Table display
+            # Table display - Updated to avoid warnings
             st.subheader("🌐 Grid Nodes Status")
-            
-            # Naya Tareeka (Warning khatam ho jayegi)
             st.dataframe(df, width="stretch", hide_index=True)
 
             # Export Intelligence

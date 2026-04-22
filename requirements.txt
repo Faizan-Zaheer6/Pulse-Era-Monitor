@@ -6,3 +6,5 @@ plotly
 fastapi
 uvicorn
 streamlit-autorefresh
+pandas
+pydantic
