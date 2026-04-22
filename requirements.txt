@@ -1,4 +1,7 @@
 streamlit
 httpx
 pandas
-fpdf    
+fpdf
+plotly
+fastapi
+uvicorn
