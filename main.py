@@ -11,6 +11,53 @@ app = FastAPI(
     title="PULSE ERA | API Monitoring Tool",
     description="Backend for monitoring website health and latency"
 )
+
+# ... (Baaki code waisa hi rahega)
+
+# --- 5. API ENDPOINTS ---
+
+@app.get("/")
+async def root():
+    """Health check endpoint for Vercel"""
+    return {
+        "Project": "Pulse Era Backend",
+        "Status": "Online",
+        "System_Time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+@app.get("/status")
+async def get_grid_status():
+    """Saari monitored sites ka status ek saath check karta hai."""
+    # asyncio.gather parallel processing ke liye best hai
+    tasks = [probe_node(url) for url in monitored_nodes]
+    results = await asyncio.gather(*tasks)
+    return results
+
+@app.post("/add-website")
+async def add_node(node: Website):
+    """Nayi website list mein add karta hai."""
+    clean_url = node.url.strip()
+    if not clean_url:
+        raise HTTPException(status_code=400, detail="URL cannot be empty")
+        
+    if clean_url not in monitored_nodes:
+        monitored_nodes.append(clean_url)
+        return {"status": "SYNCED", "added": clean_url}
+    
+    return {"status": "ALREADY_EXISTS"}
+
+@app.get("/list")
+async def list_nodes():
+    """Monitored URLs ki list dikhata hai."""
+    return {"monitored_sites": monitored_nodes}
+
+# --- 6. LAUNCH ---
+if __name__ == "__main__":
+    import uvicorn
+    # Vercel mein ye part execute nahi hota, ye sirf local testing ke liye hai
+    uvicorn.run(app, host="[IP_ADDRESS]", port=8000)    
+    
+    
 @app.get("/")
 def home():
     return {"status": "Pulse Era API is Running", "version": "1.0"}
